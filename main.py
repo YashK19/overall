@@ -63,10 +63,8 @@ class PlanetDetection:
         str: The detected planet name.
         """
         # Code to detect which planet is placed on the sensor
-        planet_ids = {
-            259584497701: "Mercury",
-            809057392480: "Venus"
-        }
+        planet_map = [("259584497701", "Mercury"), ("809057392480", "Venus")]
+    
         id = 0
         while (id == 0):
             id = JoyPiAdvanced.rfid_read_id() 
@@ -74,8 +72,14 @@ class PlanetDetection:
         while (True):
             if (pins.digital_read_pin(DigitalPin.P1) == 0):
                 break
-        if (id in planet_ids):
-            return planet_ids[id]
+
+        for (planet_data in planet_map):
+            planet_id = planet_data[0]
+            planet = planet_data[1]
+            if (str(id) == planet_id):
+                return planet
+        
+        return "Unknown"
 
 class AudioVisual:
     def __init__(self):
