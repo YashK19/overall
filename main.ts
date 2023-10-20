@@ -89,8 +89,10 @@ class Lesson {
             //  self.audio_visual.play_success_sound()
             //  wait(1000)
             //  self.audio_visual.play_rotation_sound()
-            //  speed = self.get_orbit_speed(planet)
-            //  self.planet_motion.rotate_arm(speed)
+
+            // TODO:
+            // speed = self.get_orbit_speed(planet)
+            // self.planet_motion.rotate_arm(speed)
             this.audio_visual.display_failure(planet)
             return false
         }
@@ -107,6 +109,16 @@ class Lesson {
 
 Lesson.__initLesson()
 
+class PlanetMotion {
+    constructor() {
+        
+    }
+
+    public detect_planet() {
+
+    }
+
+}
 class PlanetDetection {
     constructor() {
         JoyPiAdvanced.rfidInit()
