@@ -60,16 +60,42 @@ class Lesson {
     }
     
     public next_question() {
+        let id: any;
         /** Method to proceed to the next question. */
         this.current_question_index += 1
         if (this.current_question_index < this.questions.length) {
             this.audio_visual.display_question(this.questions[this.current_question_index]["question"])
+            id = this.planet_detection.detect_planet()
+            I2C_LCD1602.clear()
         } else {
+            //  self.check_response(id)
             this.finish_lesson()
         }
         
     }
     
+    public check_response(planet: string) {
+        /** Method to check the response.
+
+        Args:
+        planet (str): The planet name in the response.
+        
+ */
+        let correct_answer = this.questions[this.current_question_index]["answer"]
+        if (planet == correct_answer) {
+            this.audio_visual.display_success(planet)
+        } else {
+            //  self.audio_visual.play_success_sound()
+            //  wait(1000)
+            //  self.audio_visual.play_rotation_sound()
+            //  speed = self.get_orbit_speed(planet)
+            //  self.planet_motion.rotate_arm(speed)
+            this.audio_visual.display_failure(planet)
+        }
+        
+    }
+    
+    //  self.audio_visual.play_fail_sound()
     public finish_lesson() {
         /** Method to finish the lesson. */
         
@@ -84,7 +110,7 @@ class PlanetDetection {
         JoyPiAdvanced.rfidInit()
     }
     
-    public detect_planet(): number {
+    public detect_planet() {
         /** Method to detect a planet.
 
         Returns:
@@ -92,11 +118,25 @@ class PlanetDetection {
         
  */
         //  Code to detect which planet is placed on the sensor
+        let planet_ids = {
+            259584497701 : "Mercury",
+            809057392480 : "Venus",
+        }
+        
         let id = 0
         while (id == 0) {
             id = JoyPiAdvanced.rfidReadId()
         }
-        return id
+        while (true) {
+            if (pins.digitalReadPin(DigitalPin.P1) == 0) {
+                break
+            }
+            
+        }
+        if (planet_ids.indexOf(id) >= 0) {
+            return planet_ids[id]
+        }
+        
     }
     
 }
@@ -114,7 +154,9 @@ class AudioVisual {
         
  */
         //  Code to display success message on LED and play correct sound
-        I2C_LCD1602.ShowString("Correct!", 0, 0)
+        I2C_LCD1602.clear()
+        I2C_LCD1602.ShowString(planet, 0, 0)
+        I2C_LCD1602.ShowString("is correct!", 1, 0)
     }
     
     public display_failure(planet: string) {
@@ -126,7 +168,7 @@ class AudioVisual {
  */
         //  Code to display failure message on LED
         I2C_LCD1602.ShowString("Incorrect...", 0, 0)
-        I2C_LCD1602.ShowString("Try again.", 0, 1)
+        I2C_LCD1602.ShowString("Try again.", 1, 0)
     }
     
     public display_lesson_complete(message: string) {
@@ -249,7 +291,7 @@ class AudioVisual {
         }
         let j = 0
         serial.writeLine("Hello again.")
-        while (true) {
+        while (j < lines.length) {
             if (j > 1 && j % 2 == 0) {
                 basic.pause(3000)
                 I2C_LCD1602.clear()
@@ -258,26 +300,19 @@ class AudioVisual {
             row = j % 2
             I2C_LCD1602.ShowString(lines[j], 0, row)
             j += 1
-            if (j >= lines.length) {
-                basic.pause(3000)
-                I2C_LCD1602.clear()
-                j = 0
-            }
-            
-            if (pins.digitalReadPin(DigitalPin.P1) == 0) {
-                break
-            }
-            
         }
-        I2C_LCD1602.clear()
     }
     
 }
 
+//  if (j >= len(lines)):
+//      basic.pause(3000)
+//      I2C_LCD1602.clear()
+//      j = 0
 // # ALL MAIN CODE HERE ##
 //  I2C_LCD1602.lcd_init(39)
 //  pins.set_pull(DigitalPin.P1, PinPullMode.PULL_UP)
-serial.writeLine("This is running fr5.")
+serial.writeLine("This is running fr8.")
 let pd = new PlanetDetection()
 let planet = pd.detect_planet()
 serial.writeLine("" + planet)

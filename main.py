@@ -22,12 +22,35 @@ class Lesson:
         self.current_question_index += 1
         if self.current_question_index < len(self.questions):
             self.audio_visual.display_question(self.questions[self.current_question_index]['question'])
+            id = self.planet_detection.detect_planet()
+            I2C_LCD1602.clear()
+            # self.check_response(id)
         else:
             self.finish_lesson()
+
+    def check_response(self, planet: str):
+        """Method to check the response.
+
+        Args:
+        planet (str): The planet name in the response.
+        """
+        correct_answer = self.questions[self.current_question_index]['answer']
+        if planet == correct_answer:
+            self.audio_visual.display_success(planet)
+            # self.audio_visual.play_success_sound()
+            # wait(1000)
+            # self.audio_visual.play_rotation_sound()
+            # speed = self.get_orbit_speed(planet)
+            # self.planet_motion.rotate_arm(speed)
+        else:
+            self.audio_visual.display_failure(planet)
+            # self.audio_visual.play_fail_sound()
 
     def finish_lesson(self):
         """Method to finish the lesson."""
         pass
+    
+
 
 class PlanetDetection:
     def __init__(self):
@@ -40,10 +63,19 @@ class PlanetDetection:
         str: The detected planet name.
         """
         # Code to detect which planet is placed on the sensor
+        planet_ids = {
+            259584497701: "Mercury",
+            809057392480: "Venus"
+        }
         id = 0
         while (id == 0):
-            id = JoyPiAdvanced.rfid_read_id()
-        return id
+            id = JoyPiAdvanced.rfid_read_id() 
+
+        while (True):
+            if (pins.digital_read_pin(DigitalPin.P1) == 0):
+                break
+        if (id in planet_ids):
+            return planet_ids[id]
 
 class AudioVisual:
     def __init__(self):
@@ -56,7 +88,9 @@ class AudioVisual:
         planet (str): The planet name in the success message.
         """
         # Code to display success message on LED and play correct sound
-        I2C_LCD1602.show_string("Correct!", 0, 0)
+        I2C_LCD1602.clear()
+        I2C_LCD1602.show_string(planet, 0, 0)
+        I2C_LCD1602.show_string("is correct!", 1, 0)
 
     def display_failure(self, planet: str):
         """Method to display a failure message.
@@ -66,7 +100,7 @@ class AudioVisual:
         """
         # Code to display failure message on LED
         I2C_LCD1602.show_string("Incorrect..." , 0, 0)
-        I2C_LCD1602.show_string("Try again." , 0, 1)
+        I2C_LCD1602.show_string("Try again." , 1, 0)
 
     def display_lesson_complete(self, message: str):
         """Method to display a lesson complete message.
@@ -185,26 +219,22 @@ class AudioVisual:
                 break
         j = 0
         serial.write_line("Hello again.")
-        while(True):
+        while(j < len(lines)):
             if (j > 1 and j % 2 == 0):
                 basic.pause(3000)
                 I2C_LCD1602.clear()
             row = j % 2
             I2C_LCD1602.show_string(lines[j], 0, row)
             j += 1
-            if (j >= len(lines)):
-                basic.pause(3000)
-                I2C_LCD1602.clear()
-                j = 0
-            if (pins.digital_read_pin(DigitalPin.P1) == 0):
-                break
-        
-        I2C_LCD1602.clear()
+            # if (j >= len(lines)):
+            #     basic.pause(3000)
+            #     I2C_LCD1602.clear()
+            #     j = 0
     
 ## ALL MAIN CODE HERE ##
 # I2C_LCD1602.lcd_init(39)
 # pins.set_pull(DigitalPin.P1, PinPullMode.PULL_UP)
-serial.write_line("This is running fr5.")
+serial.write_line("This is running fr8.")
 pd = PlanetDetection()
 planet = pd.detect_planet()
 serial.write_line(str(planet))
