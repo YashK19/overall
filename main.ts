@@ -31,19 +31,19 @@ class Lesson {
         }
         , {
             "question" : "Which planet is known as the Red Planet?",
-            "answer" : "Mars",
+            "answer" : "Venus",
         }
         , {
             "question" : "Which planet is the largest?",
-            "answer" : "Jupiter",
+            "answer" : "Mercury",
         }
         , {
             "question" : "Which planet is the smallest?",
-            "answer" : "Saturn",
+            "answer": "Venus",
         }
         , {
             "question" : "Which planet is the furthest from the sun?",
-            "answer" : "Venus",
+            "answer": "Mercury",
         }
         ]
     }
@@ -56,19 +56,19 @@ class Lesson {
     
     public start_lesson() {
         /** Method to start the lesson. */
-        this.next_question()
+        this.next_question(false)
     }
     
-    public next_question() {
-        let id: any;
+    public next_question(correct: boolean) {
         /** Method to proceed to the next question. */
-        this.current_question_index += 1
+        if (correct) this.current_question_index += 1
         if (this.current_question_index < this.questions.length) {
             this.audio_visual.display_question(this.questions[this.current_question_index]["question"])
-            id = this.planet_detection.detect_planet()
+            let planet = this.planet_detection.detect_planet()
             I2C_LCD1602.clear()
+            let correct = this.check_response(planet)
+            this.next_question(correct)
         } else {
-            //  self.check_response(id)
             this.finish_lesson()
         }
         
@@ -84,6 +84,7 @@ class Lesson {
         let correct_answer = this.questions[this.current_question_index]["answer"]
         if (planet == correct_answer) {
             this.audio_visual.display_success(planet)
+            return true
         } else {
             //  self.audio_visual.play_success_sound()
             //  wait(1000)
@@ -91,6 +92,7 @@ class Lesson {
             //  speed = self.get_orbit_speed(planet)
             //  self.planet_motion.rotate_arm(speed)
             this.audio_visual.display_failure(planet)
+            return false
         }
         
     }
@@ -98,7 +100,7 @@ class Lesson {
     //  self.audio_visual.play_fail_sound()
     public finish_lesson() {
         /** Method to finish the lesson. */
-        
+        this.audio_visual.display_lesson_complete()
     }
     
 }
@@ -117,8 +119,11 @@ class PlanetDetection {
         str: The detected planet name.
         
  */
-        //  Code to detect which planet is placed on the sensor
-        let planet_ids = {
+        type PlanetIDMap = {
+            [key: number]: string
+        }
+
+        let planet_ids: PlanetIDMap = {
             259584497701 : "Mercury",
             809057392480 : "Venus",
         }
@@ -127,23 +132,24 @@ class PlanetDetection {
         while (id == 0) {
             id = JoyPiAdvanced.rfidReadId()
         }
+        serial.writeLine("ID GOT")
         while (true) {
+            serial.writeLine(pins.digitalReadPin(DigitalPin.P1).toString())
             if (pins.digitalReadPin(DigitalPin.P1) == 0) {
+                serial.writeLine("HELL")
                 break
             }
             
         }
-        if (planet_ids.indexOf(id) >= 0) {
-            return planet_ids[id]
-        }
         
+        return planet_ids[id] || "Unknown"
     }
     
 }
 
 class AudioVisual {
     constructor() {
-        
+        I2C_LCD1602.LcdInit(39)
     }
     
     public display_success(planet: string) {
@@ -156,7 +162,8 @@ class AudioVisual {
         //  Code to display success message on LED and play correct sound
         I2C_LCD1602.clear()
         I2C_LCD1602.ShowString(planet, 0, 0)
-        I2C_LCD1602.ShowString("is correct!", 1, 0)
+        I2C_LCD1602.ShowString("is correct!", 0, 1)
+        basic.pause(3000)
     }
     
     public display_failure(planet: string) {
@@ -167,17 +174,24 @@ class AudioVisual {
         
  */
         //  Code to display failure message on LED
-        I2C_LCD1602.ShowString("Incorrect...", 0, 0)
-        I2C_LCD1602.ShowString("Try again.", 1, 0)
+        I2C_LCD1602.ShowString(planet, 0, 0)
+        I2C_LCD1602.ShowString("is incorrect.", 0, 1)
+        basic.pause(2000)
+        I2C_LCD1602.clear()
+        I2C_LCD1602.ShowString("Try again.", 0, 0)
+        basic.pause(3000)
     }
     
-    public display_lesson_complete(message: string) {
+    public display_lesson_complete() {
         /** Method to display a lesson complete message.
 
         Args:
         message (str): The message to be displayed.
-        
- */
+        */
+        I2C_LCD1602.clear()
+        I2C_LCD1602.ShowString("Mission success!", 0, 0)
+        I2C_LCD1602.ShowString("Great work!", 0, 1)
+        basic.pause(3000)
     }
     
     public play_success_sound() {
@@ -292,6 +306,7 @@ class AudioVisual {
         let j = 0
         serial.writeLine("Hello again.")
         while (j < lines.length) {
+            serial.writeLine("HIHIHI.")
             if (j > 1 && j % 2 == 0) {
                 basic.pause(3000)
                 I2C_LCD1602.clear()
@@ -311,8 +326,10 @@ class AudioVisual {
 //      j = 0
 // # ALL MAIN CODE HERE ##
 //  I2C_LCD1602.lcd_init(39)
-//  pins.set_pull(DigitalPin.P1, PinPullMode.PULL_UP)
-serial.writeLine("This is running fr8.")
-let pd = new PlanetDetection()
-let planet = pd.detect_planet()
-serial.writeLine("" + planet)
+pins.setPull(DigitalPin.P1, PinPullMode.PullUp)
+serial.writeLine("This is running fr10.")
+let lesson = new Lesson()
+lesson.start_lesson()
+// let pd = new PlanetDetection()
+// let planet = pd.detect_planet()
+// serial.writeLine("" + planet)
