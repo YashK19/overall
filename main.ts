@@ -109,16 +109,26 @@ class Lesson {
 
 Lesson.__initLesson()
 
+
 class PlanetMotion {
+    // no constructor needed idk if this is required for JS so im leaving it
     constructor() {
         
     }
 
-    public detect_planet() {
-
+    // planet rotation Method
+    // input should not be higher than 20ms otherwise it will be choppy
+    public rotate_planet(speedInverse = 10) {
+        pins.digitalWritePin(DigitalPin.P2, 1)
+        for (let i = 0; i < 200; i++) {
+            pins.digitalWritePin(DigitalPin.P2, 0)
+            pause(speedInverse)
+            pins.digitalWritePin(DigitalPin.P2, 1)
+            pause(speedInverse)
+        }
     }
-
 }
+
 class PlanetDetection {
     constructor() {
         JoyPiAdvanced.rfidInit()
