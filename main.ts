@@ -23,6 +23,7 @@ class Lesson {
     
     audio_visual: AudioVisual
     planet_detection: PlanetDetection
+    planet_motion : PlanetMotion
     public static __initLesson() {
         Lesson.current_question_index = 0
         Lesson.questions = [ {
@@ -52,6 +53,7 @@ class Lesson {
     constructor() {
         this.audio_visual = new AudioVisual()
         this.planet_detection = new PlanetDetection()
+        this.planet_motion = new PlanetMotion()
     }
     
     public start_lesson() {
@@ -84,6 +86,8 @@ class Lesson {
         let correct_answer = this.questions[this.current_question_index]["answer"]
         if (planet == correct_answer) {
             this.audio_visual.display_success(planet)
+            this.audio_visual.play_success_sound()
+            this.planet_motion.rotate_planet()
             return true
         } else {
             //  self.audio_visual.play_success_sound()
