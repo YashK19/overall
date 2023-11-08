@@ -94,7 +94,7 @@ class Lesson {
                     this.audio_visual.play_rotation_sound()
                 }
             })
-            this.planet_motion.rotate_planet()
+            this.planet_motion.rotate_planet(planet)
             done = true
         
             return true
@@ -132,7 +132,17 @@ class PlanetMotion {
 
     // planet rotation Method
     // input should not be higher than 20ms otherwise it will be choppy
-    public rotate_planet(speedInverse = 10) {
+    public rotate_planet(planet: string) {
+
+        type SpeedInverses = {
+            [planet: string]: number
+        }
+        const speedInverses: SpeedInverses = {
+            "Mercury": 10,
+            "Venus": 7
+        }
+        const speedInverse = speedInverses[planet]
+
         pins.digitalWritePin(DigitalPin.P2, 1)
         for (let i = 0; i < 200; i++) {
             pins.digitalWritePin(DigitalPin.P2, 0)
