@@ -31,19 +31,19 @@ class Lesson {
             "answer" : "Mercury",
         }
         , {
-            "question" : "Which planet is known as the Red Planet?",
+            "question" : "Which planet is the hottest planet?",
             "answer" : "Venus",
         }
         , {
-            "question" : "Which planet is the largest?",
+            "question" : "Which planet has a day temp of 430 C?",
             "answer" : "Mercury",
         }
         , {
-            "question" : "Which planet is the smallest?",
+            "question" : "Which planet has the most carbon dioxide?",
             "answer": "Venus",
         }
         , {
-            "question" : "Which planet is the furthest from the sun?",
+            "question" : "Which planet is the smallest?",
             "answer": "Mercury",
         }
         ]
@@ -85,9 +85,18 @@ class Lesson {
  */
         let correct_answer = this.questions[this.current_question_index]["answer"]
         if (planet == correct_answer) {
-            this.audio_visual.display_success(planet)
+            let done = false
             this.audio_visual.play_success_sound()
+            this.audio_visual.display_success(planet)
+            control.inBackground(function () {
+                if (!done)
+                {
+                    this.audio_visual.play_rotation_sound()
+                }
+            })
             this.planet_motion.rotate_planet()
+            done = true
+        
             return true
         } else {
             //  self.audio_visual.play_success_sound()
@@ -97,6 +106,7 @@ class Lesson {
             // TODO:
             // speed = self.get_orbit_speed(planet)
             // self.planet_motion.rotate_arm(speed)
+            this.audio_visual.play_fail_sound()
             this.audio_visual.display_failure(planet)
             return false
         }
@@ -154,19 +164,20 @@ class PlanetDetection {
             809057392480 : "Venus",
         }
         
+        serial.writeLine("Waiting....")
         let id = 0
         while (id == 0) {
             id = JoyPiAdvanced.rfidReadId()
         }
         serial.writeLine("ID GOT")
-        while (true) {
-            serial.writeLine(pins.digitalReadPin(DigitalPin.P1).toString())
-            if (pins.digitalReadPin(DigitalPin.P1) == 0) {
-                serial.writeLine("HELL")
-                break
-            }
+        // while (true) {
+        //     serial.writeLine(pins.digitalReadPin(DigitalPin.P1).toString())
+        //     if (pins.digitalReadPin(DigitalPin.P1) == 0) {
+        //         serial.writeLine("HELL")
+        //         break
+        //     }
             
-        }
+        // }
         
         return planet_ids[id] || "Unknown"
     }
@@ -189,7 +200,7 @@ class AudioVisual {
         I2C_LCD1602.clear()
         I2C_LCD1602.ShowString(planet, 0, 0)
         I2C_LCD1602.ShowString("is correct!", 0, 1)
-        basic.pause(3000)
+        basic.pause(1000)
     }
     
     public display_failure(planet: string) {
@@ -223,19 +234,22 @@ class AudioVisual {
     public play_success_sound() {
         /** Method to play success sound. */
         //  Code to play the specified sound
-        music.play(music.tonePlayable(784, music.beat(BeatFraction.Quarter)), music.PlaybackMode.UntilDone)
+        music.play(music.tonePlayable(500, music.beat(BeatFraction.Quarter)), music.PlaybackMode.UntilDone)
         music.play(music.tonePlayable(784, music.beat(BeatFraction.Whole)), music.PlaybackMode.UntilDone)
     }
     
     public play_fail_sound() {
         /** Method to play fail sound. */
         //  Code to play the specified sound
+        music.play(music.tonePlayable(262, music.beat(BeatFraction.Quarter)), music.PlaybackMode.UntilDone)
+        music.play(music.tonePlayable(185, music.beat(BeatFraction.Whole)), music.PlaybackMode.UntilDone)
         
     }
     
     public play_rotation_sound() {
         /** Method to play rotation sound. */
         //  Star Wars
+        music.setTempo(60)
         music.play(music.tonePlayable(392, music.beat(BeatFraction.Half)), music.PlaybackMode.UntilDone)
         music.play(music.tonePlayable(587, music.beat(BeatFraction.Half)), music.PlaybackMode.UntilDone)
         music.play(music.tonePlayable(523, music.beat(BeatFraction.Quarter)), music.PlaybackMode.UntilDone)
@@ -252,6 +266,7 @@ class AudioVisual {
         music.play(music.tonePlayable(494, music.beat(BeatFraction.Quarter)), music.PlaybackMode.UntilDone)
         music.play(music.tonePlayable(523, music.beat(BeatFraction.Quarter)), music.PlaybackMode.UntilDone)
         music.play(music.tonePlayable(440, music.beat(BeatFraction.Half)), music.PlaybackMode.UntilDone)
+        music.setTempo(120)
         //  Code to play the specified sound
         
     }
@@ -265,6 +280,14 @@ class AudioVisual {
     public play_lesson_complete_sound(txt: any, aChar: any) {
         /** Method to play lesson complete sound. */
         //  Code to play the specified sound
+        music.play(music.tonePlayable(392, music.beat(BeatFraction.Half)), music.PlaybackMode.UntilDone)
+        music.play(music.tonePlayable(262, music.beat(BeatFraction.Half)), music.PlaybackMode.UntilDone)
+        // Incorrect
+        music.play(music.tonePlayable(523, music.beat(BeatFraction.Quarter)), music.PlaybackMode.UntilDone)
+        // Incorrect
+        music.play(music.tonePlayable(587, music.beat(BeatFraction.Quarter)), music.PlaybackMode.UntilDone)
+        // Incorrect
+        music.play(music.tonePlayable(784, music.beat(BeatFraction.Half)), music.PlaybackMode.UntilDone)
         
     }
     
@@ -353,9 +376,22 @@ class AudioVisual {
 // # ALL MAIN CODE HERE ##
 //  I2C_LCD1602.lcd_init(39)
 pins.setPull(DigitalPin.P1, PinPullMode.PullUp)
-serial.writeLine("This is running fr10.")
+// pins.digitalWritePin(DigitalPin.P2, 0)
+serial.writeLine("This is running fr13.")
+// pins.digitalWritePin(DigitalPin.P2, 0)
+// pins.digitalWritePin(DigitalPin.P3, 0)
+// pins.digitalWritePin(DigitalPin.P4, 0)
+music.setVolume(90)
 let lesson = new Lesson()
+// I2C_LCD1602.LcdInit(39)
+// I2C_LCD1602.ShowString("Hello", 0, 0)
+// music.setBuiltInSpeakerEnabled(true)
 lesson.start_lesson()
+
+// I2C_LCD1602.LcdInit(39)
+// I2C_LCD1602.clear()
+// I2C_LCD1602.ShowString("Hello", 0, 0)
+
 // let pd = new PlanetDetection()
 // let planet = pd.detect_planet()
 // serial.writeLine("" + planet)
